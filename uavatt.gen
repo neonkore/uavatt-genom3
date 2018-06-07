@@ -1,0 +1,168 @@
+/*/
+ * Copyright (c) 2018 LAAS/CNRS
+ * All rights reserved.
+ *
+ * Redistribution  and  use  in  source  and binary  forms,  with  or  without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   1. Redistributions of  source  code must retain the  above copyright
+ *      notice and this list of conditions.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice and  this list of  conditions in the  documentation and/or
+ *      other materials provided with the distribution.
+ *
+ * THE SOFTWARE  IS PROVIDED "AS IS"  AND THE AUTHOR  DISCLAIMS ALL WARRANTIES
+ * WITH  REGARD   TO  THIS  SOFTWARE  INCLUDING  ALL   IMPLIED  WARRANTIES  OF
+ * MERCHANTABILITY AND  FITNESS.  IN NO EVENT  SHALL THE AUTHOR  BE LIABLE FOR
+ * ANY  SPECIAL, DIRECT,  INDIRECT, OR  CONSEQUENTIAL DAMAGES  OR  ANY DAMAGES
+ * WHATSOEVER  RESULTING FROM  LOSS OF  USE, DATA  OR PROFITS,  WHETHER  IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR  OTHER TORTIOUS ACTION, ARISING OUT OF OR
+ * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ *                                           Anthony Mallet on Wed May 30 2018
+ */
+#pragma require "openrobots2-idl >= 2.0"
+
+#include "or/pose/pose_estimator.gen"
+#include "or/robot/uav.gen"
+#include "or/robot/rotorcraft.gen"
+
+component uavatt {
+  version		"1.0";
+  email			"openrobots@laas.fr";
+  lang			"c";
+  require		"genom3 >= 2.99.31";
+  codels-require	"eigen3";
+
+  provides	or_uav;
+  uses		or_rotorcraft;
+  uses		or_pose_estimator;
+
+  port in	or_pose_estimator::state state;
+
+  exception e_input;
+  exception e_sys { short code; string<128> what; };
+
+  native log_s;
+
+  ids {
+    /* geometry */
+    struct body_s {
+      double G[6 * or_rotorcraft::max_rotors]; /* velocities² to wrench */
+      double iG[or_rotorcraft::max_rotors * 6]; /* wrench to velocities² */
+
+      double J[3 * 3]; /* inertia matrix */
+      double mass;
+
+      double wmin, wmax;
+      double thrust_min[3], thrust_max[3];
+    } body;
+
+    /* controller */
+    struct servo_s {
+      struct gain_s {
+        double Kqxy, Kqz, Kwxy, Kwz;
+      } gain;
+
+      double ramp;
+      double scale;
+
+      struct emerg_s {
+        double descent;
+        double dq, dw;
+      } emerg;
+    } servo;
+
+    or_uav::input reference;
+    or_uav::input desired;
+
+    /* logging */
+    log_s log;
+  };
+
+  attribute set_mass(in body.mass);
+
+  attribute set_geom(
+    in body.G =: "Mapping from propellers velocity² to wrench",
+    in body.J =: "Inertia matrix") {
+    validate uavatt_set_geom(local in G, inout body);
+  };
+
+  attribute set_wlimit(
+    in body.wmin =: "Minimum propeller velocity",
+    in body.wmax =: "Maximum propeller velocity") {
+    validate uavatt_set_wlimit(local in wmin, local in wmax, inout body);
+  };
+
+  attribute set_servo_gain(in servo.gain);
+
+  attribute set_emerg(in servo.emerg) {
+    validate uavatt_set_emerg(local inout emerg);
+  };
+
+  attribute get_servo_parameters(out servo);
+
+
+  /* --- control ----------------------------------------------------------- */
+
+  const unsigned short control_period_ms = 1;
+
+  task main {
+    period control_period_ms ms;
+
+    codel<start> uavatt_main_start(out ::ids)
+      yield init;
+    codel<init> uavatt_main_init(in reference, out rotor_input)
+      yield pause::init, control;
+    codel<control> uavatt_main_control(in body, inout servo,
+                                       in state,
+                                       inout reference, inout desired,
+                                       inout log, out rotor_input)
+      yield pause::control;
+    codel<stop> uavatt_main_stop(out rotor_input)
+      yield ether;
+  };
+
+  activity servo() {
+    doc		"Track a desired attitude";
+    task	main;
+
+    codel<start> uavatt_servo_loop(in uav_input, out reference)
+      yield pause::start, ether;
+
+    throw e_input;
+  };
+
+  function stop() {
+    doc		"Stop tracking a desired attitude";
+
+    codel uavatt_servo_stop(ids out reference);
+
+    interrupt servo;
+  };
+
+
+  /* --- logging ----------------------------------------------------------- */
+
+  function log(in string<64> path = "/tmp/uavatt.log": "Log file name",
+               in unsigned long decimation = 1: "Reduced logging frequency") {
+    doc		"Log controller data";
+
+    codel uavatt_log(in path, in decimation, inout log);
+
+    throw e_sys;
+  };
+
+  function log_stop() {
+    doc		"Stop logging";
+
+    codel uavatt_log_stop(out log);
+  };
+
+  function log_info(out unsigned long miss = :"Missed log entries",
+                    out unsigned long total = :"Total log entries") {
+    doc		"Show missed log entries";
+
+    codel uavatt_log_info(in log, out miss, out total);
+  };
+};
