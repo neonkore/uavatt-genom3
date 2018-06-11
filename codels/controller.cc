@@ -269,6 +269,43 @@ uavatt_controller(const uavatt_ids_body_s *body,
 }
 
 
+/*
+ * --- uavatt_wrench -------------------------------------------------------
+ *
+ * Compute measured total wrench
+ */
+
+int
+uavatt_wrench(const uavatt_ids_body_s *body,
+              const or_pose_estimator_state *state,
+              const double wprop[or_rotorcraft_max_rotors],
+              double wrench[6])
+{
+  using namespace Eigen;
+
+  Quaternion<double> q;
+  Map< const Array<double, or_rotorcraft_max_rotors, 1> >wprop_(wprop);
+  Map< Matrix<double, 6, 1> >wrench_(wrench);
+
+  Map< const Matrix<double,
+                    6, or_rotorcraft_max_rotors, RowMajor> > G(body->G);
+
+  /* current state - XXX do something if state not present / uncertain */
+  if (state->att._present && !std::isnan(state->att._value.qw))
+    q.coeffs() <<
+      state->att._value.qx, state->att._value.qy, state->att._value.qz,
+      state->att._value.qw;
+  else
+    q = Quaternion<double>::Identity();
+
+  wrench_ = G * wprop_.square().matrix();
+  wrench_.block<3, 1>(0, 0) = q * wrench_.block<3, 1>(0, 0);
+  wrench_.block<3, 1>(3, 0) = q * wrench_.block<3, 1>(3, 0);
+
+  return 0;
+}
+
+
 /* --- uavatt_invert_G ----------------------------------------------------- */
 
 void

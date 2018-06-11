@@ -506,7 +506,9 @@ Show missed log entries
 a|.Context
 [disc]
   * Frequency 1000.0 _Hz_
+* Updates port `<<wrench_measure>>`
 * Updates port `<<rotor_input>>`
+* Reads port `<<rotor_measure>>`
 * Reads port `<<state>>`
 |===
 

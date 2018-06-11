@@ -38,6 +38,10 @@ extern "C" {
                           const or_uav_input *desired,
                           uavatt_log_s *log,
                           or_rotorcraft_rotor_control *wprop);
+  int	uavatt_wrench(const uavatt_ids_body_s *body,
+                      const or_pose_estimator_state *state,
+                      const double wprop[or_rotorcraft_max_rotors],
+                      double wrench[6]);
 
   void	uavatt_invert_G(const double G[6 * or_rotorcraft_max_rotors],
                         double iG[or_rotorcraft_max_rotors * 6]);

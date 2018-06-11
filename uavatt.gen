@@ -112,13 +112,17 @@ component uavatt {
     period control_period_ms ms;
 
     codel<start> uavatt_main_start(out ::ids)
-      yield init;
-    codel<init> uavatt_main_init(in reference, out rotor_input)
-      yield pause::init, control;
+      yield control;
+
     codel<control> uavatt_main_control(in body, inout servo,
                                        in state, inout reference,
                                        inout log, out rotor_input)
+      yield measure;
+    codel<measure> uavatt_main_measure(in body,
+                                       in state, in rotor_measure,
+                                       out wrench_measure)
       yield pause::control;
+
     codel<stop> uavatt_main_stop(out rotor_input)
       yield ether;
   };

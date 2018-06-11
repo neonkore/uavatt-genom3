@@ -38,7 +38,7 @@
 /** Codel uavatt_main_start of task main.
  *
  * Triggered by uavatt_start.
- * Yields to uavatt_init.
+ * Yields to uavatt_control.
  */
 genom_event
 uavatt_main_start(uavatt_ids *ids, const genom_context self)
@@ -88,6 +88,8 @@ uavatt_main_start(uavatt_ids *ids, const genom_context self)
   };
 
   ids->reference = (or_uav_input){
+    .ts = { .sec = 0, .nsec = 0 },
+    .intrinsic = false,
     .thrust._present = false,
     .att._present = false,
     .avel._present = false,
@@ -112,50 +114,14 @@ uavatt_main_start(uavatt_ids *ids, const genom_context self)
     .decimation = 1, .missed = 0, .total = 0
   };
 
-  return uavatt_init;
-}
-
-
-/** Codel uavatt_main_init of task main.
- *
- * Triggered by uavatt_init.
- * Yields to uavatt_pause_init, uavatt_control.
- */
-genom_event
-uavatt_main_init(const or_uav_input *reference,
-                 const uavatt_rotor_input *rotor_input,
-                 const genom_context self)
-{
-  or_rotorcraft_input *wprop;
-  struct timeval tv;
-  size_t i;
-
-  /* switch to servo mode upon reception of the first valid input */
-  if (reference->thrust._present) return uavatt_control;
-
-  /* output zero (minimal) velocity */
-  wprop = rotor_input->data(self);
-  if (!wprop) return uavatt_pause_init;
-
-  gettimeofday(&tv, NULL);
-  wprop->ts.sec = tv.tv_sec;
-  wprop->ts.nsec = tv.tv_usec * 1000;
-  wprop->control = or_rotorcraft_velocity;
-
-  wprop->desired._length = 4; /* XXX assumes a quadrotor */
-  for(i = 0; i < wprop->desired._length; i++)
-    wprop->desired._buffer[i] = 0.;
-
-  rotor_input->write(self);
-
-  return uavatt_pause_init;
+  return uavatt_control;
 }
 
 
 /** Codel uavatt_main_control of task main.
  *
  * Triggered by uavatt_control.
- * Yields to uavatt_pause_control.
+ * Yields to uavatt_measure.
  */
 genom_event
 uavatt_main_control(const uavatt_ids_body_s *body,
@@ -172,11 +138,12 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   int s;
 
   wprop = rotor_input->data(self);
-  if (!wprop) return uavatt_pause_control;
+  if (!wprop) return uavatt_measure;
 
   gettimeofday(&tv, NULL);
 
   /* reset propeller velocities by default - updated later by the controller */
+  wprop->desired._length = 4; /* XXX assumes a quadrotor */
   for(i = 0; i < wprop->desired._length; i++)
     wprop->desired._buffer[i] = 0.;
 
@@ -185,6 +152,10 @@ uavatt_main_control(const uavatt_ids_body_s *body,
     goto output;
   if (tv.tv_sec + 1e-6 * tv.tv_usec >
       0.5 + state_data->ts.sec + 1e-9 * state_data->ts.nsec)
+    goto output;
+
+  /* wait for reception of the first valid input */
+  if (reference->ts.sec == 0)
     goto output;
 
   /* deal with obsolete reference */
@@ -197,7 +168,14 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   /* SO(3) controller */
   s = uavatt_controller(body, servo, state_data, reference, *log,
                         &wprop->desired);
-  if (s) return uavatt_pause_control;
+  if (s) return uavatt_measure;
+
+  if (servo->scale < 1.) {
+    for(i = 0; i < wprop->desired._length; i++)
+      wprop->desired._buffer[i] *= servo->scale;
+
+    servo->scale += 1e-3 * uavatt_control_period_ms / servo->ramp;
+  }
 
   /* output */
 output:
@@ -208,14 +186,89 @@ output:
     wprop->ts.nsec = tv.tv_usec * 1000;
   }
 
-  if (servo->scale < 1.) {
-    for(i = 0; i < wprop->desired._length; i++)
-      wprop->desired._buffer[i] *= servo->scale;
+  rotor_input->write(self);
 
-    servo->scale += 1e-3 * uavatt_control_period_ms / servo->ramp;
+  return uavatt_measure;
+}
+
+
+/** Codel uavatt_main_measure of task main.
+ *
+ * Triggered by uavatt_measure.
+ * Yields to uavatt_pause_control.
+ */
+genom_event
+uavatt_main_measure(const uavatt_ids_body_s *body,
+                    const uavatt_state *state,
+                    const uavatt_rotor_measure *rotor_measure,
+                    const uavatt_wrench_measure *wrench_measure,
+                    const genom_context self)
+{
+  const or_pose_estimator_state *state_data;
+  const or_rotorcraft_output *rotor_data;
+  or_wrench_estimator_state *wrench_data;
+  double wprop[or_rotorcraft_max_rotors];
+  double wrench[6];
+  struct timeval tv;
+  double now;
+  size_t i;
+
+  wrench_data = wrench_measure->data(self);
+  if (!wrench_data) return uavatt_pause_control;
+
+  gettimeofday(&tv, NULL);
+  now = tv.tv_sec + 1e-6 * tv.tv_usec;
+
+  *wrench_data = (or_wrench_estimator_state){
+    .ts = { .sec = tv.tv_sec, .nsec = 1000 * tv.tv_usec },
+    .intrinsic = false,
+    .force = { ._present = false },
+    .force_cov = { ._present = false },
+    .torque = { ._present = false },
+    .torque_cov = { ._present = false }
+  };
+
+  /* current state (already read by control codel) */
+  if (!(state_data = state->data(self)))
+    goto output;
+
+  /* current propeller speed */
+  if (rotor_measure->read(self) || !(rotor_data = rotor_measure->data(self)))
+    goto output;
+
+  for(i = 0; i < rotor_data->rotor._length; i++) {
+    if (now > 0.1 +
+        rotor_data->rotor._buffer[i].ts.sec +
+        1e-9 * rotor_data->rotor._buffer[i].ts.nsec)
+      goto output;
+
+    if (rotor_data->rotor._buffer[i].spinning)
+      wprop[i] = rotor_data->rotor._buffer[i].velocity;
+    else
+      wprop[i] = 0.;
   }
 
-  rotor_input->write(self);
+  /* wrench */
+  if (uavatt_wrench(body, state_data, wprop, wrench))
+    goto output;
+
+  *wrench_data = (or_wrench_estimator_state){
+    .ts = { .sec = tv.tv_sec, .nsec = 1000 * tv.tv_usec },
+    .intrinsic = false,
+    .force = {
+      ._present = true,
+      ._value = { .x = wrench[0], .y = wrench[1], .z = wrench[2] }
+    },
+    .force_cov = { ._present = false },
+    .torque = {
+      ._present = true,
+      ._value = { .x = wrench[3], .y = wrench[4], .z = wrench[5] }
+    },
+    .torque_cov = { ._present = false }
+  };
+
+output:
+  wrench_measure->write(self);
 
   return uavatt_pause_control;
 }
