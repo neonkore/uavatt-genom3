@@ -104,6 +104,35 @@ uavatt_set_emerg(uavatt_ids_servo_s_emerg_s *emerg,
 }
 
 
+/* --- Function set_state ----------------------------------------------- */
+
+/** Codel uavatt_set_state of function set_state.
+ *
+ * Returns genom_ok.
+ */
+genom_event
+uavatt_set_state(const or_rb3d_force *thrust, const or_t3d_att *att,
+                 const or_t3d_avel *avel, const or_t3d_aacc *aacc,
+                 or_uav_input *reference, const genom_context self)
+{
+  (void)self; /* -Wunused-parameter */
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  *reference = (or_uav_input){
+    .ts = { .sec = tv.tv_sec, .nsec = tv.tv_usec * 1000. },
+    .intrinsic = false,
+
+    .thrust = { ._present = true, ._value = *thrust },
+    .att = { ._present = true, ._value = *att },
+    .avel = { ._present = true, ._value = *avel },
+    .aacc = { ._present = true, ._value = *aacc }
+  };
+
+  return genom_ok;
+}
+
+
 /* --- Function stop ---------------------------------------------------- */
 
 /** Codel uavatt_servo_stop of function stop.

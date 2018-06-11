@@ -94,12 +94,6 @@ uavatt_main_start(uavatt_ids *ids, const genom_context self)
     .aacc._present = false,
   };
 
-  ids->desired = (or_uav_input){
-    .thrust._present = false,
-    .att._present = false,
-    .avel._present = false,
-    .aacc._present = false,
-  };
 
   /* init logging */
   ids->log = malloc(sizeof(*ids->log));
@@ -167,7 +161,7 @@ genom_event
 uavatt_main_control(const uavatt_ids_body_s *body,
                     uavatt_ids_servo_s *servo,
                     const uavatt_state *state, or_uav_input *reference,
-                    or_uav_input *desired, uavatt_log_s **log,
+                    uavatt_log_s **log,
                     const uavatt_rotor_input *rotor_input,
                     const genom_context self)
 {
@@ -176,8 +170,6 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   struct timeval tv;
   size_t i;
   int s;
-
-  (void)desired;
 
   wprop = rotor_input->data(self);
   if (!wprop) return uavatt_pause_control;
@@ -198,7 +190,6 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   /* deal with obsolete reference */
   if (tv.tv_sec + 1e-6 * tv.tv_usec >
       0.5 + reference->ts.sec + 1e-9 * reference->ts.nsec) {
-    reference->att._present = false;
     reference->avel._present = false;
     reference->aacc._present = false;
   }

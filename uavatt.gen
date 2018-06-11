@@ -74,7 +74,6 @@ component uavatt {
     } servo;
 
     or_uav::input reference;
-    or_uav::input desired;
 
     /* logging */
     log_s log;
@@ -101,6 +100,8 @@ component uavatt {
   };
 
   attribute get_servo_parameters(out servo);
+  attribute get_geom_parameters(out body);
+  attribute get_reference(out reference);
 
 
   /* --- control ----------------------------------------------------------- */
@@ -115,8 +116,7 @@ component uavatt {
     codel<init> uavatt_main_init(in reference, out rotor_input)
       yield pause::init, control;
     codel<control> uavatt_main_control(in body, inout servo,
-                                       in state,
-                                       inout reference, inout desired,
+                                       in state, inout reference,
                                        inout log, out rotor_input)
       yield pause::control;
     codel<stop> uavatt_main_stop(out rotor_input)
@@ -131,6 +131,19 @@ component uavatt {
       yield pause::start, ether;
 
     throw e_input;
+  };
+
+  function set_state(
+    in or::rb3d::force thrust =: "Thrust",
+    in or::t3d::att att =: "Orientation",
+    in or::t3d::avel avel =: "Angular velocity",
+    in or::t3d::aacc aacc =: "Angular acceleration") {
+    doc		"Set the desired state";
+
+    codel uavatt_set_state(in thrust, in att, in avel, in aacc,
+                           ids out reference);
+
+    interrupt servo;
   };
 
   function stop() {

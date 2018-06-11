@@ -322,6 +322,61 @@ a|.Outputs
 
 '''
 
+[[get_geom_parameters]]
+=== get_geom_parameters (attribute)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Outputs
+[disc]
+ * `struct ::uavatt::ids::body_s` `body`
+ ** `double` `G[48]`
+ ** `double` `iG[48]`
+ ** `double` `J[9]`
+ ** `double` `mass`
+ ** `double` `wmin`
+ ** `double` `wmax`
+ ** `double` `thrust_min[3]`
+ ** `double` `thrust_max[3]`
+
+|===
+
+'''
+
+[[get_reference]]
+=== get_reference (attribute)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Outputs
+[disc]
+ * `struct ::or_uav::input` `reference`
+ ** `struct ::or::time::ts` `ts`
+ *** `unsigned long` `sec`
+ *** `unsigned long` `nsec`
+ ** `boolean` `intrinsic`
+ ** `optional< struct ::or::rb3d::force >` `thrust`
+ *** `double` `x`
+ *** `double` `y`
+ *** `double` `z`
+ ** `optional< struct ::or::t3d::att >` `att`
+ *** `double` `qw`
+ *** `double` `qx`
+ *** `double` `qy`
+ *** `double` `qz`
+ ** `optional< struct ::or::t3d::avel >` `avel`
+ *** `double` `wx`
+ *** `double` `wy`
+ *** `double` `wz`
+ ** `optional< struct ::or::t3d::aacc >` `aacc`
+ *** `double` `awx`
+ *** `double` `awy`
+ *** `double` `awz`
+
+|===
+
+'''
+
 [[servo]]
 === servo (activity)
 
@@ -339,6 +394,43 @@ a|.Context
 |===
 
 Track a desired attitude
+
+'''
+
+[[set_state]]
+=== set_state (function)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Inputs
+[disc]
+ * `struct ::or::rb3d::force` `thrust`: Thrust
+ ** `double` `x`
+ ** `double` `y`
+ ** `double` `z`
+
+ * `struct ::or::t3d::att` `att`: Orientation
+ ** `double` `qw`
+ ** `double` `qx`
+ ** `double` `qy`
+ ** `double` `qz`
+
+ * `struct ::or::t3d::avel` `avel`: Angular velocity
+ ** `double` `wx`
+ ** `double` `wy`
+ ** `double` `wz`
+
+ * `struct ::or::t3d::aacc` `aacc`: Angular acceleration
+ ** `double` `awx`
+ ** `double` `awy`
+ ** `double` `awz`
+
+a|.Context
+[disc]
+  * Interrupts `<<servo>>`
+|===
+
+Set the desired state
 
 '''
 
