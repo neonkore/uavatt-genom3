@@ -23,6 +23,7 @@
  */
 #include "acuavatt.h"
 
+#include <sys/time.h>
 #include <aio.h>
 #include <err.h>
 #include <unistd.h>
@@ -234,6 +235,7 @@ uavatt_controller(const uavatt_ids_body_s *body,
     if (log->req.aio_fildes >= 0 && !log->pending) {
       double d;
       double roll, pitch, yaw;
+      struct timeval tv;
 
       d = hypot(Rd(0,0), Rd(1,0));
       if (fabs(d) > 1e-10) {
@@ -245,11 +247,15 @@ uavatt_controller(const uavatt_ids_body_s *body,
       }
       pitch = atan2(-Rd(2,0), d);
 
+      gettimeofday(&tv, NULL);
+      d =
+        tv.tv_sec - state->ts.sec + (tv.tv_usec * 1e3 - state->ts.nsec)*1e-9;
+
       log->req.aio_nbytes = snprintf(
         log->buffer, sizeof(log->buffer),
         "%s" uavatt_log_fmt "\n",
         log->skipped ? "\n" : "",
-        state->ts.sec, state->ts.nsec,
+        state->ts.sec, state->ts.nsec, d,
         wrench(2), wrench(3), wrench(4), wrench(5),
         roll, pitch, yaw, wd(0), wd(1), wd(2), awd(0), awd(1), awd(2),
         eR(0), eR(1), eR(2), ew(0), ew(1), ew(2));
