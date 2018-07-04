@@ -329,3 +329,22 @@ uavatt_servo_loop(const uavatt_uav_input *uav_input,
 
   return uavatt_pause_start;
 }
+
+/** Codel uavatt_servo_stop of activity servo.
+ *
+ * Triggered by uavatt_stop.
+ * Yields to uavatt_ether.
+ * Throws uavatt_e_input.
+ */
+genom_event
+uavatt_servo_stop(or_uav_input *reference, const genom_context self)
+{
+  (void)self; /* -Wunused-parameter */
+
+  reference->thrust._present = false;
+  reference->att._present = false;
+  reference->avel._present = false;
+  reference->aacc._present = false;
+
+  return uavatt_ether;
+}

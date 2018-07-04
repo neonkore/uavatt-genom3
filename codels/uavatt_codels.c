@@ -133,31 +133,6 @@ uavatt_set_state(const or_rb3d_force *thrust, const or_t3d_att *att,
 }
 
 
-/* --- Function stop ---------------------------------------------------- */
-
-/** Codel uavatt_servo_stop of function stop.
- *
- * Returns genom_ok.
- */
-genom_event
-uavatt_servo_stop(or_uav_input *reference, const genom_context self)
-{
-  (void)self; /* -Wunused-parameter */
-  struct timeval tv;
-
-  gettimeofday(&tv, NULL);
-  reference->ts.sec = tv.tv_sec;
-  reference->ts.nsec = tv.tv_usec * 1000.;
-
-  reference->thrust._present = false;
-  reference->att._present = false;
-  reference->avel._present = false;
-  reference->aacc._present = false;
-
-  return genom_ok;
-}
-
-
 /* --- Function log ----------------------------------------------------- */
 
 /** Codel uavatt_log of function log.

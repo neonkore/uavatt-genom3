@@ -133,6 +133,8 @@ component uavatt {
 
     codel<start> uavatt_servo_loop(in uav_input, out reference)
       yield pause::start, ether;
+    codel<stop> uavatt_servo_stop(ids out reference)
+      yield ether;
 
     throw e_input;
   };
@@ -152,8 +154,6 @@ component uavatt {
 
   function stop() {
     doc		"Stop tracking a desired attitude";
-
-    codel uavatt_servo_stop(ids out reference);
 
     interrupt servo;
   };
