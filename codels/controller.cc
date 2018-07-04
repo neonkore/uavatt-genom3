@@ -28,6 +28,7 @@
 #include <err.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -72,8 +73,7 @@ uavatt_controller(const uavatt_ids_body_s *body,
   Matrix<double, 6, 1> wrench;
   Map< Array<double, or_rotorcraft_max_rotors, 1> > wprop_(wprop->_buffer);
 
-  static bool emerg;
-  bool emerg_q, emerg_w;
+  static bool emerg_q, emerg_w;
 
   /* geometry */
   Map<
@@ -129,8 +129,21 @@ uavatt_controller(const uavatt_ids_body_s *body,
     q.coeffs() <<
       state->att._value.qx, state->att._value.qy, state->att._value.qz,
       state->att._value.qw;
+    if (emerg_q)
+      warnx("recovered accurate orientation estimation");
     emerg_q = false;
   } else {
+    if (!emerg_q)
+      warnx("emergency: inaccurate orientation estimation (stddev %g)",
+        state->att._present ?
+            std::sqrt(std::max(
+                        std::max(
+                          std::max(
+                            state->avel_cov._value.cov[0],
+                            state->avel_cov._value.cov[2]),
+                          state->avel_cov._value.cov[5]),
+                        state->avel_cov._value.cov[9])) :
+            nan(""));
     emerg_q = true;
     q = qd;
   }
@@ -142,22 +155,19 @@ uavatt_controller(const uavatt_ids_body_s *body,
       state->avel_cov._value.cov[2] < servo->emerg.dw &&
       state->avel_cov._value.cov[5] < servo->emerg.dw) {
     w << state->avel._value.wx, state->avel._value.wy, state->avel._value.wz;
+    if (emerg_w)
+      warnx("recovered accurate angular velocity estimation");
     emerg_w = false;
   } else {
+    if (!emerg_w)
+      warnx("emergency: inaccurate angular velocity estimation (stddev %g)",
+        state->avel._present ?
+            std::sqrt(std::max(std::max(state->avel_cov._value.cov[0],
+                                        state->avel_cov._value.cov[2]),
+                               state->avel_cov._value.cov[5])) :
+            nan(""));
     emerg_w = true;
     w = wd;
-  }
-
-  if (emerg_q || emerg_w) {
-    if (!emerg) {
-      warnx("emergency stabilization due to uncertain state estimation");
-      emerg = true;
-    }
-  } else {
-    if (emerg) {
-      warnx("recovered from emergency");
-      emerg = false;
-    }
   }
 
 
