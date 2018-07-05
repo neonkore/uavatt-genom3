@@ -143,6 +143,8 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   gettimeofday(&tv, NULL);
 
   /* reset propeller velocities by default - updated later by the controller */
+  wprop->ts.sec = tv.tv_sec;
+  wprop->ts.nsec = tv.tv_usec * 1000;
   wprop->desired._length = 4; /* XXX assumes a quadrotor */
   for(i = 0; i < wprop->desired._length; i++)
     wprop->desired._buffer[i] = 0.;
@@ -166,26 +168,18 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   }
 
   /* SO(3) controller */
-  s = uavatt_controller(body, servo, state_data, reference, *log,
-                        &wprop->desired);
-  if (s) return uavatt_measure;
+  s = uavatt_controller(body, servo, state_data, reference, *log, wprop);
+  if (!s) {
+    if (servo->scale < 1.) {
+      for(i = 0; i < wprop->desired._length; i++)
+        wprop->desired._buffer[i] *= servo->scale;
 
-  if (servo->scale < 1.) {
-    for(i = 0; i < wprop->desired._length; i++)
-      wprop->desired._buffer[i] *= servo->scale;
-
-    servo->scale += 1e-3 * uavatt_control_period_ms / servo->ramp;
+      servo->scale += 1e-3 * uavatt_control_period_ms / servo->ramp;
+    }
   }
 
   /* output */
 output:
-  if (state_data) {
-    wprop->ts = state_data->ts;
-  } else {
-    wprop->ts.sec = tv.tv_sec;
-    wprop->ts.nsec = tv.tv_usec * 1000;
-  }
-
   rotor_input->write(self);
 
   return uavatt_measure;

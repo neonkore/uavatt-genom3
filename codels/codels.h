@@ -37,7 +37,7 @@ extern "C" {
                           const or_pose_estimator_state *state,
                           const or_uav_input *desired,
                           uavatt_log_s *log,
-                          or_rotorcraft_rotor_control *wprop);
+                          or_rotorcraft_input *wprop);
   int	uavatt_wrench(const uavatt_ids_body_s *body,
                       const or_pose_estimator_state *state,
                       const double wprop[or_rotorcraft_max_rotors],
