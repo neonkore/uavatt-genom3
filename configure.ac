@@ -47,8 +47,10 @@ PKG_CHECK_MODULES(requires, [
   eigen3
 ])
 
-AC_PATH_PROG(GENOM3, [genom3], AC_MSG_ERROR([genom3 tool not found], 2))
-
+AC_PATH_PROG(GENOM3, [genom3], [no])
+if test "$GENOM3" = "no"; then
+  AC_MSG_ERROR([genom3 tool not found], 2)
+fi
 
 dnl --with-templates option
 AG_OPT_TEMPLATES([$GENOM3 ],
