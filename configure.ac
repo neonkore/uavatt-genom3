@@ -1,6 +1,6 @@
 dnl Autoconf file for building uavatt codels library.
 dnl
-dnl Copyright (c) 2018 LAAS/CNRS
+dnl Copyright (c) 2018-2019 LAAS/CNRS
 dnl All rights reserved.
 dnl
 dnl Redistribution  and  use  in  source  and binary  forms,  with  or  without

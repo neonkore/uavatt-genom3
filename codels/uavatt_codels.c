@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 LAAS/CNRS
+ * Copyright (c) 2018-2019 LAAS/CNRS
  * All rights reserved.
  *
  * Redistribution  and  use  in  source  and binary  forms,  with  or  without
@@ -45,8 +45,8 @@ uavatt_set_geom(const double G[48], uavatt_ids_body_s *body,
                 const genom_context self)
 {
   (void)self; /* -Wunused-parameter */
-  double f[6];
-  int i;
+  double f[6], w;
+  int i, j;
 
   uavatt_invert_G(G, body->iG);
 
@@ -55,6 +55,14 @@ uavatt_set_geom(const double G[48], uavatt_ids_body_s *body,
 
   uavatt_Gw2(G, body->wmax, f);
   for(i = 0; i < 3; i++) body->thrust_max[0] = f[0];
+
+  /* count number of rotors from the iG matrix */
+  for (i = or_rotorcraft_max_rotors - 1; i >= 0; i--) {
+    w = 0.;
+    for(j = 0; j < 6; j++) w += body->iG[i * 6 + j] * body->iG[i * 6 + j];
+    if (w > 1e-6) break;
+  }
+  body->rotors = i + 1;
 
   return genom_ok;
 }

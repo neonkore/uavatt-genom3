@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 LAAS/CNRS
+ * Copyright (c) 2018-2019 LAAS/CNRS
  * All rights reserved.
  *
  * Redistribution  and  use  in  source  and binary  forms,  with  or  without
@@ -145,7 +145,7 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   /* reset propeller velocities by default - updated later by the controller */
   wprop->ts.sec = tv.tv_sec;
   wprop->ts.nsec = tv.tv_usec * 1000;
-  wprop->desired._length = 4; /* XXX assumes a quadrotor */
+  wprop->desired._length = body->rotors;
   for(i = 0; i < wprop->desired._length; i++)
     wprop->desired._buffer[i] = 0.;
 
@@ -289,7 +289,6 @@ uavatt_main_stop(const uavatt_rotor_input *rotor_input,
   wprop->ts.nsec = tv.tv_usec * 1000;
   wprop->control = or_rotorcraft_velocity;
 
-  wprop->desired._length = 4;
   for(i = 0; i < wprop->desired._length; i++)
     wprop->desired._buffer[i] = 0.;
 
