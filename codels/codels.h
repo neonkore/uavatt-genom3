@@ -81,13 +81,13 @@ struct uavatt_log_s {
 # define uavatt_g	" %g "
 # define uavatt_log_header_fmt                                          \
   "ts delay "                                                           \
-  "fz tx ty tz "                                                        \
+  "fx fy fz tx ty tz "                                                  \
   "roll pitch yaw "                                                     \
   "wx wy wz awx awy awz "                                               \
   "e_rx e_ry e_rz e_wx e_wy e_wz"
 # define uavatt_log_fmt                                                 \
   "%d.%09d " uavatt_g                                                   \
-  uavatt_g uavatt_g uavatt_g uavatt_g                                   \
+  uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g                 \
   uavatt_g uavatt_g uavatt_g                                            \
   uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g                 \
   uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g uavatt_g

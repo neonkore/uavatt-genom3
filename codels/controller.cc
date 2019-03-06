@@ -263,7 +263,7 @@ uavatt_controller(const uavatt_ids_body_s *body,
         wprop->ts.sec, wprop->ts.nsec,
         wprop->ts.sec - state->ts.sec +
         (wprop->ts.nsec - state->ts.nsec)*1e-9,
-        wrench(2), wrench(3), wrench(4), wrench(5),
+        wrench(0), wrench(1), wrench(2), wrench(3), wrench(4), wrench(5),
         roll, pitch, yaw, wd(0), wd(1), wd(2), awd(0), awd(1), awd(2),
         eR(0), eR(1), eR(2), ew(0), ew(1), ew(2));
 
