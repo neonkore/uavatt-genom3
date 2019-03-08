@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 LAAS/CNRS
+ * Copyright (c) 2018-2019 LAAS/CNRS
  * All rights reserved.
  *
  * Redistribution  and  use  in  source  and binary  forms,  with  or  without
@@ -185,8 +185,11 @@ uavatt_controller(const uavatt_ids_body_s *body,
   ew = R.transpose() * (w - wd);
 
 
-  /* wrench in body frame - XXX assumes vertical thrust in body frame */
-  wrench.block<3, 1>(0, 0) << 0., 0., fd.dot(R.col(2));
+  /* wrench in body frame */
+  if (desired->intrinsic)
+    wrench.block<3, 1>(0, 0) << fd;
+  else
+    wrench.block<3, 1>(0, 0) << Rd.transpose() * fd;
   wrench.block<3, 1>(3, 0) = - Kq * eR.array() - Kw * ew.array();
 
 
