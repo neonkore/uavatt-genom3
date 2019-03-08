@@ -181,8 +181,11 @@ uavatt_controller(const uavatt_ids_body_s *body,
   if (!desired->att._present) eR(2) = 0.;
 
 
-  /* angular velocity error */
-  ew = R.transpose() * (w - wd);
+  /* angular velocity error in world frame */
+  if (desired->intrinsic)
+    ew = R.transpose() * (w - Rd*wd);
+  else
+    ew = R.transpose() * (w - wd);
 
 
   /* wrench in body frame */
