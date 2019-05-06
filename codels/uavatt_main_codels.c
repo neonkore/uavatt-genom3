@@ -163,6 +163,8 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   /* deal with obsolete reference */
   if (tv.tv_sec + 1e-6 * tv.tv_usec >
       0.5 + reference->ts.sec + 1e-9 * reference->ts.nsec) {
+    reference->thrust._present = false;
+    reference->att._present = false;
     reference->avel._present = false;
     reference->aacc._present = false;
   }
