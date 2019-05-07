@@ -139,10 +139,10 @@ uavatt_controller(const uavatt_ids_body_s *body,
             std::sqrt(std::max(
                         std::max(
                           std::max(
-                            state->avel_cov._value.cov[0],
-                            state->avel_cov._value.cov[2]),
-                          state->avel_cov._value.cov[5]),
-                        state->avel_cov._value.cov[9])) :
+                            state->att_cov._value.cov[0],
+                            state->att_cov._value.cov[2]),
+                          state->att_cov._value.cov[5]),
+                        state->att_cov._value.cov[9])) :
             nan(""));
     emerg_q = true;
     q = qd;
