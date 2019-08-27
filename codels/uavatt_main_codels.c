@@ -145,6 +145,7 @@ uavatt_main_control(const uavatt_ids_body_s *body,
   /* reset propeller velocities by default - updated later by the controller */
   wprop->ts.sec = tv.tv_sec;
   wprop->ts.nsec = tv.tv_usec * 1000;
+  wprop->control = or_rotorcraft_velocity;
   wprop->desired._length = body->rotors;
   for(i = 0; i < wprop->desired._length; i++)
     wprop->desired._buffer[i] = 0.;
