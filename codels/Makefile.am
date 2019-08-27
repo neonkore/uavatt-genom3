@@ -32,6 +32,8 @@ libuavatt_codels_la_SOURCES+=	codels.h
 
 libuavatt_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 libuavatt_codels_la_LDFLAGS=	$(requires_LIBS)
+libuavatt_codels_la_CPPFLAGS+=	$(codels_requires_CFLAGS)
+libuavatt_codels_la_LDFLAGS+=	$(codels_requires_LIBS)
 libuavatt_codels_la_LDFLAGS+=	-release $(PACKAGE_VERSION)
 
 

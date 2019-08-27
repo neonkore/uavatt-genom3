@@ -44,6 +44,8 @@ dnl External packages
 PKG_CHECK_MODULES(requires, [
   openrobots2-idl >= 2.0
   genom3 >= 2.99.31
+])
+PKG_CHECK_MODULES(codels_requires, [
   eigen3
 ])
 
