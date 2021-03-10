@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2019 LAAS/CNRS
+// Copyright (c) 2018-2019,2021 LAAS/CNRS
 // All rights reserved.
 //
 // Redistribution  and  use  in  source  and binary  forms,  with  or  without
@@ -290,11 +290,22 @@ a|.Inputs
 a|.Inputs
 [disc]
  * `struct ::uavatt::ids::servo_s::emerg_s` `emerg`
- ** `double` `descent`
- ** `double` `dq`
- ** `double` `dw`
+ ** `double` `descent` (default `"0.1"`) Vertical acceleration for emergency descent (m/s²)
+ ** `double` `dq` (default `"5"`) Attitude uncertainty threshold (deg)
+ ** `double` `dw` (default `"20"`) Angular velocity uncertainty threshold (deg/s)
 
 |===
+
+Set thresholds for emergency hovering.
+
+`dq` and `dw` represent the maximum uncertainty tolerated in the
+input <<state>> for attitude (`dq`) and angular velocity (`dw`),
+measured as 3 times the standard deviation.
+By default, `dq` is 5⁰ and `dw` 20⁰/s. Beyond that threshold, an
+emergency hovering is started.
+
+The emergency hovering uses no feedback, as the state is considered
+invalid. Thus, stability is not guaranteed ...
 
 '''
 
