@@ -81,7 +81,6 @@ uavatt_main_start(uavatt_ids *ids, const genom_context self)
     .scale = 0.,
 
     .emerg = {
-      .descent = .1,
       .dq = 5. * 5. * M_PI*M_PI/180./180./9.,
       .dw = 20. * 20. * M_PI*M_PI/180./180./9.
     }

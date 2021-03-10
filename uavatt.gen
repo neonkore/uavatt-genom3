@@ -69,7 +69,6 @@ component uavatt {
       double scale;
 
       struct emerg_s {
-        double descent;
         double dq, dw;
       } emerg;
     } servo;
@@ -97,7 +96,6 @@ component uavatt {
   attribute set_servo_gain(in servo.gain);
 
   attribute set_emerg(in servo.emerg = {
-    0.1 : "Vertical acceleration for emergency descent (m/s²)",
     5 : "Attitude uncertainty threshold (deg)",
     20 : "Angular velocity uncertainty threshold (deg/s)" }) {
     doc "Set thresholds for emergency hovering.";
