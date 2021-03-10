@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018-2019 LAAS/CNRS
+# Copyright (c) 2018-2019,2021 LAAS/CNRS
 # All rights reserved.
 #
 # Redistribution  and  use  in  source  and binary  forms,  with  or  without
@@ -23,18 +23,18 @@
 #
 lib_LTLIBRARIES = libuavatt_codels.la
 
-libuavatt_codels_la_SOURCES=	uavatt_c_types.h
-libuavatt_codels_la_SOURCES+=	uavatt_codels.c
-libuavatt_codels_la_SOURCES+=	uavatt_main_codels.c
+libuavatt_codels_la_SOURCES  =	uavatt_c_types.h
+libuavatt_codels_la_SOURCES +=	uavatt_codels.c
+libuavatt_codels_la_SOURCES +=	uavatt_main_codels.c
 
-libuavatt_codels_la_SOURCES+=	controller.cc
-libuavatt_codels_la_SOURCES+=	codels.h
+libuavatt_codels_la_SOURCES +=	controller.cc
+libuavatt_codels_la_SOURCES +=	codels.h
 
-libuavatt_codels_la_CPPFLAGS=	$(requires_CFLAGS)
-libuavatt_codels_la_LDFLAGS=	$(requires_LIBS)
+libuavatt_codels_la_CPPFLAGS =	$(requires_CFLAGS)
+libuavatt_codels_la_LIBADD   =	$(requires_LIBS)
 libuavatt_codels_la_CPPFLAGS+=	$(codels_requires_CFLAGS)
-libuavatt_codels_la_LDFLAGS+=	$(codels_requires_LIBS)
-libuavatt_codels_la_LDFLAGS+=	-release $(PACKAGE_VERSION)
+libuavatt_codels_la_LIBADD  +=	$(codels_requires_LIBS)
+libuavatt_codels_la_LDFLAGS  =	-release $(PACKAGE_VERSION)
 
 
 # idl  mappings
