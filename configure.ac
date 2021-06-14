@@ -25,7 +25,7 @@ dnl
 
 AC_PREREQ(2.59)
 
-AC_INIT([uavatt-genom3],[1.0],[openrobots@laas.fr])
+AC_INIT([uavatt-genom3],[1.1],[openrobots@laas.fr])
 AC_CONFIG_MACRO_DIR([autoconf])
 AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_HEADERS([autoconf/acuavatt.h])

@@ -29,7 +29,7 @@
 
 = uavatt component
 openrobots@laas.fr
-1.0
+1.1
 :toc: left
 
 // fix default asciidoctor stylesheet issue #2407 and add hr clear rule
